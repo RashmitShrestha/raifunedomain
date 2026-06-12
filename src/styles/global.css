@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --pink: #ff075e;
+  --maroon: #7f0000;
+  --violet: #5900ff;
+  --cyan: #4cffe7;
+  --void: #03010a;
+  --bone: #e9e4f0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--void);
+  color: var(--bone);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+#root {
+  position: relative;
+}
+
+/* The R3F canvas sits behind the DOM UI. */
+.scene-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.ui-layer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* let scene receive drags; re-enable on interactive bits */
+}
+
+.ui-layer a,
+.ui-layer button {
+  pointer-events: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--pink);
+  color: var(--void);
+}
+
+/* little bob for the "scroll to enter ↓" cue in the hero */
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
