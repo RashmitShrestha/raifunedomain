@@ -1,0 +1,399 @@
+/*
+ * ============================================================================
+ * story.css — DOM overlays from the Figma storyboard.
+ * ============================================================================
+ *
+ * SIZING: every Figma screen is a 1942×1084 frame standing in for the
+ * browser window, so pixel sizes are converted to viewport units:
+ *     Figma px / 1942 * 100 = vw      (e.g. 64px title -> 3.3vw)
+ *     Figma px / 1084 * 100 = vh
+ * wrapped in clamp(min, vw, max) so text stays readable on phones and
+ * doesn't get silly on ultrawide monitors.
+ *
+ * All story UI uses Google Sans Code SemiBold (600) like the Figma file.
+ */
+
+.story {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  color: #fff;
+  z-index: 2;
+}
+.story button {
+  pointer-events: auto;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+.story-fade {
+  transition: opacity 0.8s ease;
+}
+.story-hidden {
+  opacity: 0;
+  pointer-events: none !important;
+}
+.story-hidden * {
+  pointer-events: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * START GAME PAGE
+ * ------------------------------------------------------------------------- */
+.start-sound {
+  position: absolute;
+  top: 8.3vh; /* 90px / 1084 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(36px, 3.1vw, 60px); /* 60px / 1942 */
+  aspect-ratio: 1;
+  padding: 0;
+}
+.start-sound .icon {
+  /* The Figma speaker PNG is white-on-BLACK (no transparency). Using it as a
+     LUMINANCE mask over a white box keeps the white shape and drops the
+     black, so it sits cleanly on top of the 3D scene. */
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  -webkit-mask: url('/ui/sound.png') center / contain no-repeat;
+  mask: url('/ui/sound.png') center / contain no-repeat;
+  mask-mode: luminance;
+  transition: opacity 0.3s;
+}
+.start-sound.muted .icon {
+  opacity: 0.35;
+}
+.start-sound.muted::after {
+  /* simple slash through the speaker when muted */
+  content: '';
+  position: absolute;
+  left: -10%;
+  top: 50%;
+  width: 120%;
+  height: 3px;
+  background: var(--ui-pink);
+  transform: rotate(-40deg);
+}
+
+.start-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-top: 4vh;
+}
+.start-title {
+  font-size: clamp(1.4rem, 3.3vw, 4rem); /* 64px */
+  letter-spacing: 0.37em; /* 23.68px / 64px */
+  line-height: 1.2;
+  margin-right: -0.37em; /* letter-spacing adds trailing space; re-center */
+  pointer-events: auto;
+  cursor: default;
+}
+.start-check {
+  width: clamp(48px, 4.9vw, 95px); /* 95px */
+  height: auto;
+  margin-top: 9vh;
+}
+.start-button {
+  margin-top: 0.4vh;
+  font-size: clamp(1rem, 2.06vw, 2.5rem) !important; /* 40px */
+  letter-spacing: 0.37em !important; /* 14.8px / 40px */
+  margin-right: -0.37em;
+  line-height: 1.2;
+  white-space: pre-line;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+.start-button:hover,
+.start-button:focus-visible {
+  color: var(--ui-pink);
+  text-shadow: 0 0 14px var(--ui-pink);
+  outline: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * MAIN ENTRANCE HUD
+ * ------------------------------------------------------------------------- */
+.hud-enter {
+  position: absolute;
+  top: 5.8vh; /* 63px */
+  right: 3.2vw;
+  font-size: clamp(0.9rem, 2.06vw, 2.5rem); /* 40px */
+  letter-spacing: 0.37em;
+  line-height: 1.2;
+}
+.hud-enter .caret {
+  color: var(--ui-pink);
+}
+
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5vh;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6vh;
+  font-size: clamp(0.65rem, 1.03vw, 1.25rem); /* 20px */
+  letter-spacing: 0.37em; /* 7.4px / 20px */
+}
+.scroll-cue span {
+  margin-right: -0.37em;
+}
+.scroll-cue img {
+  width: clamp(40px, 7.4vw, 144px); /* 143.76px chevron */
+  height: auto;
+  transform: rotate(180deg); /* the SVG triangle points up; storyboard ▽ points down */
+  animation: bob 1.6s ease-in-out infinite;
+}
+
+.sound-corner {
+  position: absolute;
+  left: 1.6vw;
+  bottom: 2vh;
+  width: 28px;
+  aspect-ratio: 1;
+  opacity: 0.6;
+}
+.sound-corner:hover {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * GATE MODAL — "TO ENTER YOU MUST TAKE OFF YOUR SHOES."
+ * ------------------------------------------------------------------------- */
+.gate-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 12vh; /* 130px / 1084 — sits above the doors, not centered */
+  pointer-events: auto;
+}
+.gate-card {
+  width: clamp(280px, 36vw, 700px); /* 700px */
+  aspect-ratio: 700 / 514;
+  background: #000;
+  border: clamp(3px, 0.26vw, 5px) solid #fff; /* 5px */
+  border-radius: clamp(16px, 1.6vw, 31px); /* 31px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2vw;
+  letter-spacing: -0.02em; /* -0.96px / 48px */
+  animation: gate-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gate-warning {
+  color: var(--ui-pink);
+  font-size: clamp(0.95rem, 2.06vw, 2.5rem); /* 40px */
+  max-width: 80%;
+  line-height: 1.2;
+}
+.gate-check {
+  width: clamp(36px, 3.77vw, 73px);
+  height: auto;
+  margin: 4.5vh 0 0.6vh;
+}
+.gate-accept {
+  font-size: clamp(1.1rem, 2.47vw, 3rem) !important; /* 48px */
+  line-height: 1.2;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+.gate-accept:hover,
+.gate-accept:focus-visible {
+  color: var(--ui-pink);
+  text-shadow: 0 0 14px var(--ui-pink);
+  outline: none;
+}
+@keyframes gate-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * PROJECT MODAL — "STARTING HALLWAY SCROLL -- CLICKING ON SOMETHING"
+ * ------------------------------------------------------------------------- */
+.project-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  /* Solid wall-gray in the middle, fading to clear at the left/right edges
+     so the 3D pink wall orbs peek in as half-circles — exactly where the
+     Figma mockup draws them. */
+  background: linear-gradient(
+    to right,
+    transparent 0,
+    rgba(30, 30, 30, 0.97) 7%,
+    rgba(30, 30, 30, 0.97) 93%,
+    transparent 100%
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* wait for the camera to finish its focus move before appearing */
+  animation: project-in 0.6s ease 0.45s both;
+}
+@keyframes project-in {
+  from {
+    opacity: 0;
+  }
+}
+.project-close {
+  position: absolute;
+  top: 2.6vh; /* 28px */
+  right: 2.2vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: clamp(0.55rem, 0.7vw, 0.85rem);
+  letter-spacing: 0.37em;
+}
+.project-close .x {
+  position: relative;
+  width: clamp(34px, 3.39vw, 66px); /* 65.8px */
+  aspect-ratio: 65.8 / 48.5;
+}
+.project-close .x img {
+  position: absolute;
+  height: auto;
+}
+.project-close:hover .x {
+  filter: drop-shadow(0 0 6px var(--ui-pink));
+}
+
+.project-body {
+  width: min(60vw, 1164px); /* 1164px title width */
+  min-width: min(92vw, 340px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.project-title {
+  align-self: stretch;
+  font-weight: 700;
+  font-size: clamp(0.85rem, 1.65vw, 2rem); /* 32px */
+  letter-spacing: -0.02em; /* -0.64px / 32px */
+  margin-bottom: 0.4vh;
+}
+.project-stage {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3vw;
+}
+/* `.story` prefix: beats the generic `.story button` reset above */
+.story .project-shot {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1139 / 503; /* single-image frame */
+  border: clamp(5px, 0.72vw, 14px) solid #fff; /* 14px */
+  background: #000;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+}
+.project-shot.carousel {
+  width: 45%;
+  aspect-ratio: 520 / 442; /* carousel frame is narrower */
+}
+.project-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.visit-pop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: clamp(0.9rem, 1.65vw, 2rem);
+  letter-spacing: 0.37em;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.project-shot:hover .visit-pop,
+.project-shot:focus-visible .visit-pop {
+  opacity: 1;
+}
+.visit-pop span {
+  border: 3px solid #fff;
+  border-radius: 37px;
+  padding: 0.6em 1.2em;
+}
+.project-shot:hover {
+  box-shadow: 0 0 24px rgba(255, 16, 108, 0.6);
+}
+.carousel-arrow {
+  flex: none;
+  padding: 1vw !important;
+}
+.carousel-arrow img {
+  height: clamp(36px, 5.1vh, 110px);
+  width: auto;
+  display: block;
+}
+.carousel-arrow:hover img {
+  filter: drop-shadow(0 0 6px var(--ui-pink));
+}
+.carousel-dots {
+  display: flex;
+  gap: clamp(10px, 1.3vw, 25px);
+  margin-top: 2vh;
+}
+.carousel-dots button {
+  width: clamp(12px, 1.65vw, 32px); /* 32px */
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff;
+}
+.carousel-dots button.active {
+  background: var(--ui-violet);
+}
+.project-desc {
+  align-self: stretch;
+  color: var(--ui-pink);
+  font-weight: 700;
+  font-size: clamp(0.75rem, 1.65vw, 2rem); /* 32px */
+  letter-spacing: -0.0225em;
+  line-height: 1.25;
+  margin: 2.5vh 0;
+}
+.project-tech {
+  align-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2vh 2.5vw; /* 48px between pills */
+  list-style: none;
+}
+.project-tech li {
+  min-width: clamp(90px, 11.5vw, 223px); /* 223px */
+  min-height: clamp(30px, 7.1vh, 77px); /* 77px */
+  padding: 0.3em 1em;
+  border: clamp(2px, 0.15vw, 3px) solid #fff; /* 3px */
+  border-radius: 37px;
+  display: grid;
+  place-items: center;
+  font-size: clamp(0.6rem, 1.03vw, 1.25rem); /* 20px */
+  letter-spacing: 0.2em; /* 4px / 20px */
+  text-align: center;
+}

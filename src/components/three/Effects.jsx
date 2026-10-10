@@ -9,7 +9,7 @@ export default function Effects() {
   return (
     <EffectComposer disableNormalPass>
       <Bloom
-        intensity={1.15}
+        intensity={1}
         luminanceThreshold={0.2}
         luminanceSmoothing={0.9}
         mipmapBlur

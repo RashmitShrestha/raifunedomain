@@ -6,6 +6,8 @@ export const theme = {
   font: {
     display: "'Space Grotesk', 'Segoe UI', system-ui, sans-serif",
     mono: "'Space Mono', ui-monospace, 'Cascadia Code', monospace",
+    // The storyboard's typeface (all the story UI uses this)
+    ui: "'Google Sans Code', 'Space Mono', ui-monospace, monospace",
   },
   glow: {
     pink: `0 0 12px ${COLORS.pink}, 0 0 32px ${COLORS.pink}55`,

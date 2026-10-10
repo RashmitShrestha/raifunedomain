@@ -3,6 +3,38 @@ import { useFrame } from '@react-three/fiber';
 import { Edges, useScroll } from '@react-three/drei';
 import * as THREE from 'three';
 import { COLORS, PALETTE } from '../../constants/brand';
+import { exteriorProgress } from '../../constants/scene';
+
+/*
+ * Shared, mutable "how open are the doors" value (0 → 1).
+ * Doors writes it every frame; every GlowEdges reads it. A plain object
+ * (not React state) because it changes 60×/sec and must NOT trigger renders.
+ */
+const templeGlow = { value: 0 };
+
+/*
+ * GlowEdges — drop-in replacement for drei's <Edges>.
+ *
+ * Storyboard: "doors slowly open ... the edges of the house seem to grow
+ * bright/bigger". drei's <Edges> draws with a fat-line material, which
+ * (unlike plain WebGL lines) supports real pixel line widths. So each frame
+ * we scale BOTH:
+ *   - linewidth:  1px  -> ~3.5px          ("bigger")
+ *   - color:      x1   -> x3.5 brightness ("brighter" — values > 1 push past
+ *                                          the bloom threshold and flare)
+ */
+function GlowEdges({ color, threshold = 15 }) {
+  const ref = useRef();
+  const base = useRef(new THREE.Color(color));
+  useFrame(() => {
+    const line = ref.current;
+    if (!line) return;
+    const g = templeGlow.value;
+    line.material.linewidth = 1 + g * 2.5;
+    line.material.color.copy(base.current).multiplyScalar(1 + g * 2.5);
+  });
+  return <Edges ref={ref} color={color} threshold={threshold} />;
+}
 
 /** Dark stone-ish body material, lit by the scene's red/blue rim lights. */
 const stoneProps = {
@@ -20,14 +52,14 @@ function Tier({ y, width, height, roofColor }) {
       <mesh position={[0, y, 0]} castShadow receiveShadow>
         <boxGeometry args={[width, height, width]} />
         <meshStandardMaterial {...stoneProps} />
-        <Edges color={COLORS.cyan} threshold={15} />
+        <GlowEdges color={COLORS.cyan} threshold={15} />
       </mesh>
 
       {/* Pyramid roof (cylinder w/ 4 radial segments, top radius 0) */}
       <mesh position={[0, roofY, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
         <cylinderGeometry args={[0, width * 0.92, 0.9, 4, 1]} />
         <meshStandardMaterial color="#241016" roughness={0.7} metalness={0.3} />
-        <Edges color={roofColor} threshold={15} />
+        <GlowEdges color={roofColor} threshold={15} />
       </mesh>
     </group>
   );
@@ -127,10 +159,12 @@ function Doors() {
   const open = useRef(0);
 
   useFrame(() => {
-    // scroll.range(start, distance) returns 0→1 ONLY across that slice of the
-    // scroll, clamped outside it. Here: nothing happens until 70% scrolled,
-    // then it ramps 0→1 over the final 30%. That's our "doors open at the end".
-    const target = scroll.range(0.7, 0.3);
+    // The exterior is now only the first slice of a longer scroll (see
+    // constants/scene.js), so first convert raw offset -> exterior 0→1.
+    // Then: nothing happens until 70% of the exterior, and it ramps 0→1 over
+    // the final 30%. That's our "doors open at the end".
+    const ext = exteriorProgress(scroll.offset);
+    const target = THREE.MathUtils.clamp((ext - 0.7) / 0.3, 0, 1);
 
     // Damp the actual open amount toward the target (smoothing, again).
     open.current = THREE.MathUtils.lerp(open.current, target, 0.1);
@@ -143,6 +177,9 @@ function Doors() {
 
     // The interior light blooms up as the doors part — the reveal moment.
     if (interiorLight.current) interiorLight.current.intensity = open.current * 9;
+
+    // Publish for GlowEdges (the whole temple's outline flares as we open).
+    templeGlow.value = open.current;
   });
 
   // Shared look for the two door panels.
@@ -153,20 +190,19 @@ function Doors() {
   return (
     // Whole assembly sits on the front face of the lowest tier (local z = +2.2).
     <group position={[0, 1.5, 2.21]}>
-      {/* INTERIOR GLOW: a hot plane + a light, BEHIND the doors. While the
-          doors are shut they occlude this; as they open it's revealed. */}
-      <mesh position={[0, 0, -0.25]}>
-        <planeGeometry args={[2.0, 1.7]} />
-        <meshBasicMaterial
-          color={COLORS.cyan}
-          transparent
-          opacity={0.9}
-          blending={THREE.AdditiveBlending}
-        />
+      {/* DARK ROOM: storyboard says the doors "reveal a dark room for now".
+          The temple's walls are single-sided, so without this you'd see
+          straight through the temple's insides to the stars. This box is
+          rendered from the INSIDE (side=BackSide) and fits inside the lowest
+          tier. Once the camera crosses the threshold, Experience swaps the
+          whole exterior out for the real Hallway. */}
+      <mesh position={[0, 0.05, -2.0]}>
+        <boxGeometry args={[3.6, 1.8, 4.0]} />
+        <meshStandardMaterial color="#050308" roughness={1} side={THREE.BackSide} />
       </mesh>
       <pointLight
         ref={interiorLight}
-        position={[0, 0, 0.4]}
+        position={[0, 0, -0.6]}
         color={COLORS.pink}
         intensity={0}
         distance={8}
@@ -178,7 +214,7 @@ function Doors() {
         <mesh position={[0.5, 0, 0]} castShadow>
           <boxGeometry args={[1.0, 1.7, 0.12]} />
           {doorMat}
-          <Edges color={COLORS.pink} threshold={15} />
+          <GlowEdges color={COLORS.pink} threshold={15} />
         </mesh>
       </group>
 
@@ -187,7 +223,7 @@ function Doors() {
         <mesh position={[-0.5, 0, 0]} castShadow>
           <boxGeometry args={[1.0, 1.7, 0.12]} />
           {doorMat}
-          <Edges color={COLORS.violet} threshold={15} />
+          <GlowEdges color={COLORS.violet} threshold={15} />
         </mesh>
       </group>
     </group>
@@ -206,12 +242,12 @@ export default function Temple({ position = [0, 0, 0] }) {
       <mesh position={[0, 0.25, 0]} receiveShadow castShadow>
         <boxGeometry args={[7, 0.5, 7]} />
         <meshStandardMaterial {...stoneProps} />
-        <Edges color={COLORS.violet} threshold={15} />
+        <GlowEdges color={COLORS.violet} threshold={15} />
       </mesh>
       <mesh position={[0, 0.7, 0]} receiveShadow castShadow>
         <boxGeometry args={[6, 0.5, 6]} />
         <meshStandardMaterial {...stoneProps} />
-        <Edges color={COLORS.pink} threshold={15} />
+        <GlowEdges color={COLORS.pink} threshold={15} />
       </mesh>
 
       {/* Three stacked tiers, shrinking upward */}

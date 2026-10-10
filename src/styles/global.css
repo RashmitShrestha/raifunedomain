@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
   --pink: #ff075e;
@@ -7,6 +7,10 @@
   --cyan: #4cffe7;
   --void: #03010a;
   --bone: #e9e4f0;
+  /* Figma storyboard UI accents + typeface */
+  --ui-pink: #ff106c;
+  --ui-violet: #3d00b7;
+  --font-ui: 'Google Sans Code', 'Space Mono', ui-monospace, monospace;
 }
 
 * {

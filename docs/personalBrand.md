@@ -25,4 +25,23 @@
     * cyan-colored torches in the front
 * black hole in the background, stars
     * dark red and blue elements
-* mix of ancient and future 
+* mix of ancient and future 
+
+### 3D Story IDEA:
+
+The current code with the an outward view of the temple is cool but i want to expand that more and make my portfolio website engaging, fun, informative, and leaving an impression on the users
+
+With that, I want to think about other ways to utilize three.js and creative story telling processes to tell a story in a unique style
+
+For example there are stop motion animations styles, 
+
+
+### Timeline:
+
+start with game like dialog box of:
+
+"Are you ready to start the story?"
+
+"Sound On or Off (On recommended)"
+
+
