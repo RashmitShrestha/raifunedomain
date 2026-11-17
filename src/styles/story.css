@@ -378,8 +378,21 @@
   line-height: 1.25;
   margin: 2.5vh 0;
 }
-.project-tech {
+.project-pills {
   align-self: stretch;
+  margin-bottom: 1.8vh;
+}
+.project-pills-label {
+  font-size: clamp(0.55rem, 0.75vw, 0.9rem);
+  font-weight: 600;
+  letter-spacing: 0.37em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 1vh;
+}
+/* Each <li> gets its own --pill color inline (pillColors.js). */
+.project-tech,
+.project-tag {
   display: flex;
   flex-wrap: wrap;
   gap: 1.2vh 2.5vw; /* 48px between pills */
@@ -389,11 +402,31 @@
   min-width: clamp(90px, 11.5vw, 223px); /* 223px */
   min-height: clamp(30px, 7.1vh, 77px); /* 77px */
   padding: 0.3em 1em;
-  border: clamp(2px, 0.15vw, 3px) solid #fff; /* 3px */
+  border: clamp(2px, 0.15vw, 3px) solid var(--pill, #fff); /* 3px */
   border-radius: 37px;
   display: grid;
   place-items: center;
   font-size: clamp(0.6rem, 1.03vw, 1.25rem); /* 20px */
   letter-spacing: 0.2em; /* 4px / 20px */
   text-align: center;
+  color: var(--pill, #fff);
+  background: color-mix(in srgb, var(--pill, #fff) 8%, transparent);
+}
+/* Tags: smaller, filled chips so they read as a different kind of thing. */
+.project-tag {
+  gap: 1vh 1.2vw;
+}
+.project-tag li {
+  padding: 0.45em 1.1em;
+  border-radius: 37px;
+  font-size: clamp(0.55rem, 0.85vw, 1rem);
+  letter-spacing: 0.15em;
+  color: var(--pill, #fff);
+  background: color-mix(in srgb, var(--pill, #fff) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pill, #fff) 45%, transparent);
+}
+.project-tag li::before {
+  content: '#';
+  opacity: 0.6;
+  margin-right: 0.25em;
 }

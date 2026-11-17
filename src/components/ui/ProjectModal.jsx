@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStory } from '../../store/useStory';
 import { PROJECTS } from '../../constants/projects';
+import { TAG_COLORS, TECH_COLORS, pillColor } from '../../constants/pillColors';
 import { drawPlaceholder } from '../../lib/placeholderArt';
 import { playSfx } from '../../lib/audio';
 import { useScramble } from './GlitchText.jsx';
@@ -16,7 +17,7 @@ import { useScramble } from './GlitchText.jsx';
  * Storyboard behaviors:
  *   - "as it focuses the words under unscramble in that glitch effect ...
  *      and reveal the title of the site, as well as a short description"
- *      -> title, description and tech pills all run useScramble on open.
+ *      -> title, description, tech and tag pills all run useScramble on open.
  *   - "hovering on the frame will show a visit site popup, and then clicking
  *      again will send you to the site" -> .visit-pop on hover, click opens
  *      project.url in a new tab.
@@ -30,6 +31,23 @@ const OPEN_DELAY = 450; // ms — matches the CSS fade-in delay
 
 function Scrambled({ text, run, delay = OPEN_DELAY, duration = 800 }) {
   return useScramble(text, run, { delay, duration });
+}
+
+/** A labeled row of pills, each tinted with its own color (pillColors.js). */
+function PillSection({ label, items, colors, run, delay, variant = 'tech' }) {
+  if (!items.length) return null;
+  return (
+    <section className="project-pills">
+      <h3 className="project-pills-label">{label}</h3>
+      <ul className={`project-${variant}`}>
+        {items.map((t, i) => (
+          <li key={t} style={{ '--pill': pillColor(t, colors) }}>
+            <Scrambled text={t} run={run} delay={delay + i * 90} duration={400} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 export default function ProjectModal() {
@@ -141,15 +159,15 @@ export default function ProjectModal() {
             <Scrambled text={project.description} run={activeId} duration={1200} />
           </p>
 
-          {project.tech.length > 0 && (
-            <ul className="project-tech">
-              {project.tech.map((t, i) => (
-                <li key={t}>
-                  <Scrambled text={t} run={activeId} delay={OPEN_DELAY + 300 + i * 90} duration={400} />
-                </li>
-              ))}
-            </ul>
-          )}
+          <PillSection label="technologies" items={project.tech} colors={TECH_COLORS} run={activeId} delay={OPEN_DELAY + 300} />
+          <PillSection
+            label="tags"
+            items={project.tags ?? []}
+            colors={TAG_COLORS}
+            run={activeId}
+            delay={OPEN_DELAY + 300 + project.tech.length * 90}
+            variant="tag"
+          />
         </div>
       </div>
     </div>
