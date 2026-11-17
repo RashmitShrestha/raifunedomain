@@ -58,13 +58,13 @@ export default function BlackHoleSun({ position = [0, 0, 0] }) {
     <group position={position}>
       {/* Event horizon — absolute black, swallows light */}
       <mesh>
-        <sphereGeometry args={[5.5, 64, 64]} polygonOffset polygonOffsetFactor={1} polygonOffsetUnits={1} />
+        <sphereGeometry args={[5.5, 64, 64]} />
         <meshBasicMaterial color="#000000" polygonOffset polygonOffsetFactor={1} polygonOffsetUnits={1} />
       </mesh>
 
       {/* Inner photon ring — hot pink/red, tilted toward camera */}
       <mesh ref={diskRef} rotation={[DISK_TILT, 0, 0]}>
-        <ringGeometry args={[5.7, 9.5, 128]} polygonOffset polygonOffsetFactor={1} polygonOffsetUnits={1} />
+        <ringGeometry args={[5.7, 9.5, 128]} />
         <meshBasicMaterial
           color={COLORS.pink}
           side={THREE.DoubleSide}
@@ -80,7 +80,7 @@ export default function BlackHoleSun({ position = [0, 0, 0] }) {
 
       {/* Outer disk — violet/blue, larger and dimmer */}
       <mesh ref={outerRef} rotation={[DISK_TILT, 0, 0]}>
-        <ringGeometry args={[9.5, 13, 128]} polygonOffset polygonOffsetFactor={1} polygonOffsetUnits={1} />
+        <ringGeometry args={[9.5, 13, 128]} />
         <meshBasicMaterial
           color={COLORS.violet}
           side={THREE.DoubleSide}
@@ -104,7 +104,7 @@ export default function BlackHoleSun({ position = [0, 0, 0] }) {
       {/* Corona — camera-facing soft glow halo behind the horizon */}
       <Billboard>
         <mesh ref={haloRef} position={[0, 0, -0.5]}>
-          <circleGeometry args={[11, 64]} polygonOffset polygonOffsetFactor={1} polygonOffsetUnits={1} />
+          <circleGeometry args={[11, 64]} />
           <meshBasicMaterial
             color={COLORS.maroon}
             transparent

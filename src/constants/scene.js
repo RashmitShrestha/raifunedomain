@@ -101,7 +101,8 @@ export const FRAME_SLOTS = PROJECTS.map((project, i) => {
   return {
     id: project.id,
     wall: left ? 'left' : 'right',
-    position: new THREE.Vector3(left ? -HALL.halfWidth + 0.02 : HALL.halfWidth - 0.02, HALL.frameY, z),
+    // 0.06 off the wall: thinner gaps z-fight when seen down the corridor.
+    position: new THREE.Vector3(left ? -HALL.halfWidth + 0.06 : HALL.halfWidth - 0.06, HALL.frameY, z),
     rotation: [0, left ? Math.PI / 2 : -Math.PI / 2, 0],
     normal: new THREE.Vector3(left ? 1 : -1, 0, 0),
   };

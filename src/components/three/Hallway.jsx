@@ -103,7 +103,7 @@ function ProjectFrame({ project, slot, index }) {
       {/* Clickable picture + its border */}
       <group onPointerOver={onOver} onPointerOut={onOut} onClick={onClick}>
         {/* White border = a slightly bigger white plane just behind the art */}
-        <mesh ref={border} position={[0, 0, -0.005]}>
+        <mesh ref={border} position={[0, 0, -0.02]}>
           <planeGeometry args={[w + 0.14, h + 0.14]} />
           <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </mesh>
@@ -148,7 +148,15 @@ export default function Hallway() {
           camera, at the doorway) is never in view while walking forward. */}
       <mesh position={center} receiveShadow>
         <boxGeometry args={[HALL.halfWidth * 2, height, length]} />
-        <meshStandardMaterial color={COLORS.wall} roughness={0.95} side={THREE.BackSide} />
+        <meshStandardMaterial
+          color={COLORS.wall}
+          roughness={0.95}
+          side={THREE.BackSide}
+          // push the wall back so the corner <Edges> lines don't z-fight it
+          polygonOffset
+          polygonOffsetFactor={1}
+          polygonOffsetUnits={1}
+        />
         <Edges color="#d9d9d9" threshold={15} />
       </mesh>
 

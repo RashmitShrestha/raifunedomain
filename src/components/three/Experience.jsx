@@ -74,7 +74,10 @@ export default function Experience() {
       dpr={[1, 2]} // clamp pixel ratio: crisp on retina, not wasteful
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       // Initial camera; CameraRig takes over its position every frame.
-      camera={{ position: [0, 10, 30], fov: 42, near: 0.1, far: 200 }}
+      // near=0.5 (not 0.1): depth precision scales with near, so a tiny near
+      // plane makes distant surfaces z-fight (flicker) — worst on mobile GPUs.
+      // The camera never gets closer than ~2 units to anything, so 0.5 is safe.
+      camera={{ position: [0, 10, 30], fov: 42, near: 0.5, far: 200 }}
     >
       {/* Solid void background + distance fog so far things melt into black. */}
       <color attach="background" args={[COLORS.void]} />

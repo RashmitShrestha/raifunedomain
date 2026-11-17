@@ -26,6 +26,9 @@ export default function Lighting() {
         shadow-camera-top={15}
         shadow-camera-bottom={-15}
         shadow-bias={-0.0004}
+        // Offsets the shadow lookup along the surface normal; kills the
+        // striped "shadow acne" that shimmers as the camera moves.
+        shadow-normalBias={0.03}
       />
 
       {/* Cool violet/blue fill rim from the front-left */}

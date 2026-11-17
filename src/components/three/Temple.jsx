@@ -36,11 +36,24 @@ function GlowEdges({ color, threshold = 15 }) {
   return <Edges ref={ref} color={color} threshold={threshold} />;
 }
 
+/*
+ * The GlowEdges lines sit EXACTLY on the faces' edges, so lines and faces
+ * have identical depth and fight over each pixel (flicker), especially far
+ * from the camera where depth precision is lowest. polygonOffset nudges the
+ * FACES slightly back in depth so the lines always win.
+ */
+const edgeOffset = {
+  polygonOffset: true,
+  polygonOffsetFactor: 1,
+  polygonOffsetUnits: 1,
+};
+
 /** Dark stone-ish body material, lit by the scene's red/blue rim lights. */
 const stoneProps = {
   color: '#16101f',
   roughness: 0.85,
   metalness: 0.2,
+  ...edgeOffset,
 };
 
 /** One pagoda tier: a body box capped by an overhanging pyramid roof. */
@@ -58,7 +71,7 @@ function Tier({ y, width, height, roofColor }) {
       {/* Pyramid roof (cylinder w/ 4 radial segments, top radius 0) */}
       <mesh position={[0, roofY, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
         <cylinderGeometry args={[0, width * 0.92, 0.9, 4, 1]} />
-        <meshStandardMaterial color="#241016" roughness={0.7} metalness={0.3} />
+        <meshStandardMaterial color="#241016" roughness={0.7} metalness={0.3} {...edgeOffset} />
         <GlowEdges color={roofColor} threshold={15} />
       </mesh>
     </group>
@@ -184,7 +197,7 @@ function Doors() {
 
   // Shared look for the two door panels.
   const doorMat = (
-    <meshStandardMaterial color="#0c0712" roughness={0.6} metalness={0.5} />
+    <meshStandardMaterial color="#0c0712" roughness={0.6} metalness={0.5} {...edgeOffset} />
   );
 
   return (

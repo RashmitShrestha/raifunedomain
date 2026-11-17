@@ -220,8 +220,6 @@ export default function CameraRig() {
     camera.position.lerp(targetPos.current, damping);
     currentLook.current.lerp(targetLook.current, damping);
     camera.lookAt(currentLook.current);
-    camera.near = 0.1; // Ensure the near plane is set correctly
-    camera.far = 200; // Ensure the far plane is set correctly
   });
 
   // This component renders nothing visible — it only drives the camera.
