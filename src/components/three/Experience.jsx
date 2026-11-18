@@ -11,6 +11,7 @@ import Starfield from './Starfield.jsx';
 import Lighting from './Lighting.jsx';
 import Effects from './Effects.jsx';
 import CameraRig from './CameraRig.jsx';
+import { DEBUG } from '../../lib/debug';
 import ScrollDirector from './ScrollDirector.jsx';
 
 /**
@@ -70,7 +71,7 @@ function HiddenOnStart({ children }) {
 export default function Experience() {
   return (
     <Canvas
-      shadows
+      shadows={!DEBUG.noShadows}
       dpr={[1, 2]} // clamp pixel ratio: crisp on retina, not wasteful
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       // Initial camera; CameraRig takes over its position every frame.

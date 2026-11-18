@@ -34,6 +34,8 @@ export const useStory = create((set) => ({
   shoesOff: false,
   activeProject: null,
   zone: 'top',
+  /** Eye/head tracking: 'off' | 'loading' | 'on' | 'error' */
+  tracking: 'off',
 
   begin: () => set({ phase: 'intro' }),
   finishIntro: () => set({ phase: 'explore' }),
@@ -48,4 +50,5 @@ export const useStory = create((set) => ({
   closeProject: () => set({ activeProject: null }),
 
   setZone: (zone) => set({ zone }),
+  setTracking: (tracking) => set({ tracking }),
 }));

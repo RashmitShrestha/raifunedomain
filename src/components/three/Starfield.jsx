@@ -1,7 +1,9 @@
 import { Stars } from '@react-three/drei';
+import { DEBUG } from '../../lib/debug';
 
 /** Sparkle-star void. Wraps drei's <Stars> with brand-tuned density. */
 export default function Starfield() {
+  if (DEBUG.noStars) return null;
   return (
     <Stars
       radius={200}

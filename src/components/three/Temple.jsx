@@ -4,6 +4,7 @@ import { Edges, useScroll } from '@react-three/drei';
 import * as THREE from 'three';
 import { COLORS, PALETTE } from '../../constants/brand';
 import { exteriorProgress } from '../../constants/scene';
+import { DEBUG } from '../../lib/debug';
 
 /*
  * Shared, mutable "how open are the doors" value (0 → 1).
@@ -33,6 +34,7 @@ function GlowEdges({ color, threshold = 15 }) {
     line.material.linewidth = 1 + g * 2.5;
     line.material.color.copy(base.current).multiplyScalar(1 + g * 2.5);
   });
+  if (DEBUG.noEdges) return null;
   return <Edges ref={ref} color={color} threshold={threshold} />;
 }
 
@@ -44,8 +46,8 @@ function GlowEdges({ color, threshold = 15 }) {
  */
 const edgeOffset = {
   polygonOffset: true,
-  polygonOffsetFactor: 1,
-  polygonOffsetUnits: 1,
+  polygonOffsetFactor: 2,
+  polygonOffsetUnits: 4,
 };
 
 /** Dark stone-ish body material, lit by the scene's red/blue rim lights. */

@@ -1,4 +1,54 @@
 import { useStory } from '../../store/useStory';
+import { startHeadTracking, stopHeadTracking } from '../../lib/headTracking';
+
+/*
+ * Eye-tracking toggle. Turning it on asks for the front camera; the scene
+ * then drifts with your head instead of the mouse (see lib/headTracking.js).
+ * Camera access needs HTTPS (or localhost) and a tap, so this can't auto-start.
+ */
+function TrackingToggle() {
+  const tracking = useStory((s) => s.tracking);
+  const setTracking = useStory((s) => s.setTracking);
+
+  const onClick = async () => {
+    if (tracking === 'on' || tracking === 'loading') {
+      stopHeadTracking();
+      setTracking('off');
+      return;
+    }
+    setTracking('loading');
+    try {
+      await startHeadTracking();
+      // Only flip to 'on' if the user didn't cancel while it was loading.
+      if (useStory.getState().tracking === 'loading') setTracking('on');
+    } catch (err) {
+      console.warn('[head tracking]', err);
+      setTracking('error');
+    }
+  };
+
+  const label = {
+    off: 'Turn on eye tracking',
+    loading: 'Starting eye tracking…',
+    on: 'Turn off eye tracking',
+    error: 'Eye tracking unavailable (camera blocked?). Tap to retry',
+  }[tracking];
+
+  return (
+    <button
+      className={`sound-corner track-toggle track-${tracking}`}
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      aria-pressed={tracking === 'on'}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    </button>
+  );
+}
 
 /*
  * MAIN ENTRANCE (Figma: "MAIN ENTERANCE")
@@ -33,6 +83,8 @@ export default function EntranceHUD() {
       >
         <span className="icon" />
       </button>
+
+      <TrackingToggle />
     </div>
   );
 }

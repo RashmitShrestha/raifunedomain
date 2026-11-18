@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Billboard, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
+import { DEBUG } from '../../lib/debug';
 import { COLORS } from '../../constants/brand';
 import { DISK_TILT } from '../../constants/scene';
 import { useStory } from '../../store/useStory';
@@ -96,7 +97,7 @@ export default function BlackHoleSun({ position = [0, 0, 0] }) {
 
       {/* Particles drifting in the disk plane. The group shares the disk's
           tilt; the flattened scale (z = 1.5) keeps them hugging the disk. */}
-      <group rotation={[DISK_TILT, 0, 0]}>
+      <group rotation={[DISK_TILT, 0, 0]} visible={!DEBUG.noSparkle}>
         <Sparkles count={140} scale={[28, 28, 1.5]} size={6} speed={0.35} noise={0.6} color={COLORS.pink} />
         <Sparkles count={80} scale={[30, 30, 2]} size={4} speed={0.25} noise={0.8} color={COLORS.cyan} />
       </group>

@@ -170,6 +170,30 @@
   opacity: 1;
 }
 
+/* Eye-tracking toggle — sits just right of the sound corner button. */
+.track-toggle {
+  left: calc(1.6vw + 40px);
+  padding: 0;
+}
+.track-toggle svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.track-toggle.track-on {
+  opacity: 1;
+  color: var(--cyan, #5ef2ff);
+}
+.track-toggle.track-loading {
+  animation: track-pulse 1s ease-in-out infinite;
+}
+.track-toggle.track-error {
+  opacity: 0.35;
+}
+@keyframes track-pulse {
+  50% { opacity: 0.2; }
+}
+
 /* ---------------------------------------------------------------------------
  * GATE MODAL — "TO ENTER YOU MUST TAKE OFF YOUR SHOES."
  * ------------------------------------------------------------------------- */

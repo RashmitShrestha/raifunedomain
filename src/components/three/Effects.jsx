@@ -1,4 +1,5 @@
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import { DEBUG } from '../../lib/debug';
 
 /**
  * Post-processing: bloom makes the accretion disk, torches, neon edges and
@@ -6,6 +7,7 @@ import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
  * the frame edges so the eye falls to the temple + sun.
  */
 export default function Effects() {
+  if (DEBUG.noBloom) return null;
   return (
     <EffectComposer disableNormalPass>
       <Bloom

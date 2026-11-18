@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Edges } from '@react-three/drei';
 import * as THREE from 'three';
+import { DEBUG } from '../../lib/debug';
 import { COLORS } from '../../constants/brand';
 import { PROJECTS } from '../../constants/projects';
 import { FRAME_SLOTS, HALL } from '../../constants/scene';
@@ -154,10 +155,10 @@ export default function Hallway() {
           side={THREE.BackSide}
           // push the wall back so the corner <Edges> lines don't z-fight it
           polygonOffset
-          polygonOffsetFactor={1}
-          polygonOffsetUnits={1}
+          polygonOffsetFactor={2}
+          polygonOffsetUnits={4}
         />
-        <Edges color="#d9d9d9" threshold={15} />
+        {!DEBUG.noEdges && <Edges color="#d9d9d9" threshold={15} />}
       </mesh>
 
       {lightZs.map((z) => (

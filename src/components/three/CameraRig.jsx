@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useScroll } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStory } from '../../store/useStory';
+import { head } from '../../lib/headTracking';
 import {
   BLACK_HOLE_POS,
   DISK_NORMAL,
@@ -99,14 +100,20 @@ const ENTRY_POS = new THREE.Vector3(0, HALL.eyeHeight, 1.4);
 const HALL_END_POS = new THREE.Vector3(0, HALL.eyeHeight, HALL.zEnd + 5.5);
 const HALL_LOOK_AHEAD = 10; // look this far down the corridor
 
-// How far the mouse is allowed to nudge the camera (in world units).
-// Keep this SMALL — parallax sway should be felt, not seen. Inside the
-// narrow hallway (and when focused on a frame) we sway even less.
+// How far the mouse / your head is allowed to nudge the camera, in world
+// units: [side to side, up and down, lean in/out]. Inside the narrow hallway
+// (and when focused on a frame) we sway less so you can't clip a wall.
 const SWAY = {
-  outside: [0.7, 0.35],
-  inside: [0.22, 0.1],
-  focus: [0.06, 0.04],
+  outside: [1.8, 0.9, 1.5],
+  inside: [0.6, 0.28, 0.6],
+  focus: [0.25, 0.14, 0.35],
 };
+
+// How quickly the sway catches up with the mouse/head, per second. This is a
+// separate, slower spring than the camera's own DAMPING, so parallax glides
+// instead of twitching. Lower = silkier and laggier. It's frame-rate
+// independent (see damp() below), so it feels the same at 30fps and 120fps.
+const SWAY_SMOOTHING = 2.2;
 
 // Smoothing factor. Lower = heavier/laggier, higher = snappier.
 // 0.05–0.12 is the sweet spot for that luxurious, weighty feel.
@@ -135,20 +142,26 @@ export default function CameraRig() {
   const targetPos = useRef(new THREE.Vector3());
   const targetLook = useRef(new THREE.Vector3());
   const currentLook = useRef(BLACK_HOLE_POS.clone()); // where we're CURRENTLY looking
+  const basePos = useRef(new THREE.Vector3()); // camera position BEFORE sway
+  const swayTarget = useRef(new THREE.Vector3());
+  const sway = useRef(new THREE.Vector3()); // smoothed sway offset (world units)
+  const viewDir = useRef(new THREE.Vector3());
+  const right = useRef(new THREE.Vector3());
+  const up = useRef(new THREE.Vector3());
   const introStart = useRef(null); // clock time when the intro began
   const placed = useRef(false);
 
   // useFrame runs once per rendered frame (~60fps). This is our animation loop.
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const { phase, activeProject, finishIntro } = useStory.getState();
-    let sway = SWAY.outside;
+    let swayRange = SWAY.outside;
     let damping = DAMPING;
 
     if (phase === 'start') {
       // ---- SHOT 1: hover above the black hole, look down its axis --------
       targetPos.current.copy(RING_POS);
       targetLook.current.copy(BLACK_HOLE_POS);
-      sway = SWAY.inside; // a whisper of motion so it doesn't feel frozen
+      swayRange = SWAY.inside; // a whisper of motion so it doesn't feel frozen
     } else if (phase === 'intro') {
       // ---- SHOT 2: time-driven swoop along the curve ---------------------
       if (introStart.current === null) introStart.current = state.clock.elapsedTime;
@@ -169,7 +182,7 @@ export default function CameraRig() {
       const slot = FRAME_SLOTS.find((s) => s.id === activeProject);
       targetPos.current.copy(slot.position).addScaledVector(slot.normal, FOCUS_DISTANCE);
       targetLook.current.copy(slot.position);
-      sway = SWAY.focus;
+      swayRange = SWAY.focus;
       damping = FOCUS_DAMPING;
     } else {
       // ---- SHOT 3: scroll-driven exterior + hallway ----------------------
@@ -188,28 +201,40 @@ export default function CameraRig() {
         targetLook.current
           .set(0, HALL.eyeHeight, ENTRY_POS.z - HALL_LOOK_AHEAD)
           .lerp(END_LOOK, 1 - p);
-        sway = SWAY.inside;
+        swayRange = SWAY.inside;
       } else {
         // ACT 2b — walk the corridor. Linear (not eased) so the walking pace
         // matches your scroll speed 1:1, like actually walking.
         const p = (hall - HALL_ENTRY) / (1 - HALL_ENTRY);
         targetPos.current.lerpVectors(ENTRY_POS, HALL_END_POS, p);
         targetLook.current.set(0, HALL.eyeHeight, targetPos.current.z - HALL_LOOK_AHEAD);
-        sway = SWAY.inside;
+        swayRange = SWAY.inside;
       }
     }
 
-    // ---- MOUSE PARALLAX sway ---------------------------------------------
-    // state.pointer is the cursor in "normalized device coords": x and y
-    // each run from -1 (one edge) to +1 (the other). We offset the camera
-    // a touch in the OPPOSITE direction of the cursor, which makes the
-    // foreground appear to swing against your mouse = strong depth cue.
-    targetPos.current.x += -state.pointer.x * sway[0];
-    targetPos.current.y += -state.pointer.y * sway[1];
+    // ---- PARALLAX sway: head tracking if it's on, otherwise the mouse ---
+    if (head.active) {
+      // HEAD: the camera moves WITH you, like looking through a window.
+      // Step right and you peek around the left side of the temple; lean
+      // in and the camera drifts forward. This is "head-coupled
+      // perspective" — the trick that makes a flat screen feel like depth.
+      swayTarget.current.set(head.x * swayRange[0], head.y * swayRange[1], head.z * swayRange[2]);
+    } else {
+      // MOUSE: state.pointer runs -1…+1 on each axis. We move the camera
+      // a touch AGAINST the cursor, so the foreground swings opposite your
+      // hand = a strong depth cue. No lean (z) for the mouse.
+      swayTarget.current.set(-state.pointer.x * swayRange[0], -state.pointer.y * swayRange[1], 0);
+    }
+
+    // Frame-rate-independent exponential smoothing. A fixed lerp(…, 0.08)
+    // moves further per second at 120fps than at 30fps; 1 - e^(-k·dt) fixes
+    // that. (delta is capped so a backgrounded tab doesn't snap on return.)
+    const swayAlpha = 1 - Math.exp(-SWAY_SMOOTHING * Math.min(delta, 0.1));
+    sway.current.lerp(swayTarget.current, swayAlpha);
 
     // First frame: teleport instead of gliding in from the Canvas default.
     if (!placed.current) {
-      camera.position.copy(targetPos.current);
+      basePos.current.copy(targetPos.current);
       currentLook.current.copy(targetLook.current);
       placed.current = true;
     }
@@ -217,8 +242,21 @@ export default function CameraRig() {
     // ---- DAMP toward the targets instead of snapping ---------------------
     // Vector3.lerp(target, alpha) moves the vector `alpha` of the way to
     // `target`. Doing this every frame = exponential smoothing (a spring).
-    camera.position.lerp(targetPos.current, damping);
+    basePos.current.lerp(targetPos.current, damping);
     currentLook.current.lerp(targetLook.current, damping);
+
+    // Final camera = story position + sway, applied in the CAMERA's own
+    // frame: x along its right, y along its up, z (lean) along where it's
+    // looking. So "side to side" is always side to side on screen — even
+    // when you're turned to face a frame on the hallway wall.
+    viewDir.current.subVectors(currentLook.current, basePos.current).normalize();
+    right.current.crossVectors(viewDir.current, camera.up).normalize();
+    up.current.crossVectors(right.current, viewDir.current);
+    camera.position
+      .copy(basePos.current)
+      .addScaledVector(right.current, sway.current.x)
+      .addScaledVector(up.current, sway.current.y)
+      .addScaledVector(viewDir.current, sway.current.z);
     camera.lookAt(currentLook.current);
   });
 
